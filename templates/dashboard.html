@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/stylesheet/2.15.0/salesforce-lightning-design-system.min.css">
+    <style>
+        .slds-grid {
+            height: 100vh;
+        }
+        .slds-panel {
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="slds-grid">
+        <div class="slds-size--1-of-2 slds-p-around--medium">
+            <div class="slds-card slds-shadow_small">
+                <div class="slds-card__header">
+                    <h2 class="slds-text-heading_small">Query Creation</h2>
+                </div>
+                <div class="slds-card__body">
+                    <form>
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label" for="query">Enter your query:</label>
+                            <div class="slds-form-element__control">
+                                <textarea id="query" class="slds-textarea" rows="5"></textarea>
+                            </div>
+                        </div>
+                        <button class="slds-button slds-button_brand" type="submit">Run Query</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="slds-size--1-of-2 slds-p-around--medium">
+            <div class="slds-card slds-shadow_small">
+                <div class="slds-card__header">
+                    <h2 class="slds-text-heading_small">Results Display</h2>
+                </div>
+                <div class="slds-card__body">
+                    <div id="results" class="slds-text-longform">
+                        <!-- Results will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
