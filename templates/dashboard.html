@@ -3,52 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/stylesheet/2.15.0/salesforce-lightning-design-system.min.css">
+    <title>SOQL Query Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@salesforce-ux/design-system/assets/styles/salesforce-lightning-design-system.min.css">
     <style>
-        .slds-grid {
-            height: 100vh;
+        body {
+            background-color: #f3f3f3;
         }
-        .slds-panel {
-            overflow-y: auto;
+        .app-header {
+            background-color: #0070d2;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .app-header__title {
+            color: white;
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .app-header__user {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        #results-table-container {
+            overflow-x: auto;
+        }
+        #results-meta {
+            display: none;
+        }
+        #error-box {
+            display: none;
+        }
+        #loading-spinner {
+            display: none;
+        }
+        #export-btn {
+            display: none;
+        }
+        .slds-card {
+            margin-bottom: 1rem;
         }
     </style>
 </head>
 <body>
 
-    <div class="slds-grid">
-        <div class="slds-size--1-of-2 slds-p-around--medium">
-            <div class="slds-card slds-shadow_small">
-                <div class="slds-card__header">
-                    <h2 class="slds-text-heading_small">Query Creation</h2>
-                </div>
-                <div class="slds-card__body">
-                    <form>
-                        <div class="slds-form-element">
-                            <label class="slds-form-element__label" for="query">Enter your query:</label>
-                            <div class="slds-form-element__control">
-                                <textarea id="query" class="slds-textarea" rows="5"></textarea>
-                            </div>
-                        </div>
-                        <button class="slds-button slds-button_brand" type="submit">Run Query</button>
-                    </form>
-                </div>
-            </div>
+    <!-- Header -->
+    <header class="app-header">
+        <h1 class="app-header__title">SOQL Query Tool</h1>
+        <div class="app-header__user">
+            {% if user_name %}
+                <span>{{ user_name }}{% if user_email %} &mdash; {{ user_email }}{% endif %}</span>
+            {% endif %}
+            <a href="/logout" class="slds-button slds-button_neutral" style="color:#0070d2;background:white;">Logout</a>
         </div>
-        
-        <div class="slds-size--1-of-2 slds-p-around--medium">
-            <div class="slds-card slds-shadow_small">
-                <div class="slds-card__header">
-                    <h2 class="slds-text-heading_small">Results Display</h2>
-                </div>
-                <div class="slds-card__body">
-                    <div id="results" class="slds-text-longform">
-                        <!-- Results will be displayed here -->
+    </header>
+
+    <div class="slds-p-around_medium">
+
+        <!-- Query Card -->
+        <div class="slds-card">
+            <div class="slds-card__header slds-grid">
+                <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                    <div class="slds-media__body">
+                        <h2 class="slds-card__header-title slds-text-heading_small">Execute SOQL Query</h2>
+                    </div>
+                </header>
+            </div>
+            <div class="slds-card__body slds-card__body_inner">
+                <form id="query-form">
+                    <div class="slds-form-element slds-m-bottom_small">
+                        <label class="slds-form-element__label" for="query">SOQL Query</label>
+                        <div class="slds-form-element__control">
+                            <textarea id="query" class="slds-textarea" rows="5" placeholder="e.g. SELECT Id, Name FROM Account LIMIT 10"></textarea>
+                        </div>
+                    </div>
+                    <button id="run-btn" class="slds-button slds-button_brand" type="submit">Run Query</button>
+                </form>
+
+                <!-- Loading Spinner -->
+                <div id="loading-spinner" class="slds-m-top_small" role="status">
+                    <div class="slds-spinner_container" style="position:relative;height:3rem;">
+                        <div role="status" class="slds-spinner slds-spinner_small" style="position:absolute;">
+                            <span class="slds-assistive-text">Loading</span>
+                            <div class="slds-spinner__dot-a"></div>
+                            <div class="slds-spinner__dot-b"></div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Error Box -->
+                <div id="error-box" class="slds-notify slds-notify_alert slds-theme_error slds-m-top_small" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <span id="error-message"></span>
+                </div>
             </div>
         </div>
+
+        <!-- Results Card -->
+        <div class="slds-card">
+            <div class="slds-card__header slds-grid">
+                <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                    <div class="slds-media__body">
+                        <h2 class="slds-card__header-title slds-text-heading_small">Results</h2>
+                    </div>
+                    <div class="slds-no-flex">
+                        <button id="export-btn" class="slds-button slds-button_neutral" type="button">Export CSV</button>
+                    </div>
+                </header>
+            </div>
+            <div class="slds-card__body slds-card__body_inner">
+                <div id="results-meta" class="slds-m-bottom_small slds-text-color_weak slds-text-body_small">
+                    <span id="record-count"></span> &bull; <span id="execution-time"></span>
+                </div>
+                <div id="results-table-container">
+                    <p class="slds-text-color_weak slds-text-body_regular" id="no-results-msg">Run a query to see results here.</p>
+                </div>
+            </div>
+        </div>
+
     </div>
+
+    <script>
+        let lastResults = null;
+
+        document.getElementById('query-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const query = document.getElementById('query').value.trim();
+            if (!query) {
+                showError('Please enter a SOQL query.');
+                return;
+            }
+            setLoading(true);
+            hideError();
+            clearResults();
+
+            try {
+                const response = await fetch('/api/execute-query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showError(data.error || 'Query execution failed.');
+                } else {
+                    lastResults = data;
+                    renderResults(data);
+                }
+            } catch (err) {
+                showError('Network error: ' + err.message);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        document.getElementById('export-btn').addEventListener('click', async function() {
+            if (!lastResults || !lastResults.records || !lastResults.records.length) return;
+            try {
+                const response = await fetch('/api/download-csv', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ records: lastResults.records, columns: lastResults.columns })
+                });
+                if (!response.ok) {
+                    showError('CSV export failed.');
+                    return;
+                }
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const disposition = response.headers.get('Content-Disposition') || '';
+                const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                a.download = match ? match[1].replace(/['"]/g, '') : 'salesforce_query.csv';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                showError('CSV export error: ' + err.message);
+            }
+        });
+
+        function setLoading(on) {
+            document.getElementById('loading-spinner').style.display = on ? 'block' : 'none';
+            document.getElementById('run-btn').disabled = on;
+        }
+
+        function showError(msg) {
+            const box = document.getElementById('error-box');
+            document.getElementById('error-message').textContent = msg;
+            box.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error-box').style.display = 'none';
+        }
+
+        function clearResults() {
+            document.getElementById('results-meta').style.display = 'none';
+            document.getElementById('export-btn').style.display = 'none';
+            const container = document.getElementById('results-table-container');
+            container.innerHTML = '<p class="slds-text-color_weak slds-text-body_regular" id="no-results-msg">Run a query to see results here.</p>';
+            lastResults = null;
+        }
+
+        function renderResults(data) {
+            const container = document.getElementById('results-table-container');
+            const meta = document.getElementById('results-meta');
+
+            document.getElementById('record-count').textContent =
+                data.totalSize + ' record' + (data.totalSize !== 1 ? 's' : '');
+            document.getElementById('execution-time').textContent =
+                'Executed in ' + data.executionTime.toFixed(3) + 's';
+            meta.style.display = 'block';
+
+            if (!data.records || data.records.length === 0) {
+                container.innerHTML = '<p class="slds-text-color_weak">No records returned.</p>';
+                return;
+            }
+
+            document.getElementById('export-btn').style.display = 'inline-flex';
+
+            const table = document.createElement('table');
+            table.className = 'slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped';
+
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            data.columns.forEach(function(col) {
+                const th = document.createElement('th');
+                th.scope = 'col';
+                th.className = 'slds-is-sortable';
+                th.innerHTML = '<div class="slds-truncate" title="' + escapeHtml(col) + '">' + escapeHtml(col) + '</div>';
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            data.records.forEach(function(record) {
+                const tr = document.createElement('tr');
+                data.columns.forEach(function(col) {
+                    const td = document.createElement('td');
+                    const val = String(record[col] ?? '');
+                    td.innerHTML = '<div class="slds-truncate" title="' + escapeHtml(val) + '">' + escapeHtml(val) + '</div>';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+    </script>
 
 </body>
 </html>
