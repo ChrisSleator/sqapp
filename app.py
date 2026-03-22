@@ -119,6 +119,7 @@ def callback():
         user_info = user_info_response.json()
         session['user_name'] = user_info.get('name')
         session['user_email'] = user_info.get('email')
+        session['organization_id'] = user_info.get('organization_id')
         
         return redirect('/dashboard')
     
@@ -132,7 +133,8 @@ def dashboard():
     
     return render_template('dashboard.html', 
                           user_name=session.get('user_name'),
-                          user_email=session.get('user_email'))
+                          user_email=session.get('user_email'),
+                          org_id=session.get('organization_id'))
 
 @app.route('/api/execute-query', methods=['POST'])
 def execute_query():

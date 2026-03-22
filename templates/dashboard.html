@@ -56,7 +56,7 @@
         <h1 class="app-header__title">SOQL Query Tool</h1>
         <div class="app-header__user">
             {% if user_name %}
-                <span>{{ user_name }}{% if user_email %} &mdash; {{ user_email }}{% endif %}</span>
+                <span>{{ user_name }}{% if user_email %} &mdash; {{ user_email }}{% endif %}{% if org_id %} &mdash; Org: {{ org_id }}{% endif %}</span>
             {% endif %}
             <a href="/logout" class="slds-button slds-button_neutral" style="color:#0070d2;background:white;">Logout</a>
         </div>
