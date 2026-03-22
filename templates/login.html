@@ -1,1 +1,53 @@
-<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <link rel="stylesheet" href="https://stylesheet-url-for-salesforce-design-system.css">\n    <title>OAuth Login</title>\n</head>\n<body>\n    <div class="slds-brand-header slds-grid slds-grid_align-center">\n        <div class="slds-brand-header__content">\n            <h1 class="slds-text-heading_large">Login with Salesforce</h1>\n        </div>\n    </div>\n    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-around_medium">\n        <form action="/oauth2/auth" method="GET" class="slds-form slds-form_stacked">\n            <label class="slds-form-element__label" for="username">Username</label>\n            <div class="slds-form-element">\n                <input type="text" id="username" name="username" class="slds-input" required>\n            </div>\n            <label class="slds-form-element__label" for="password">Password</label>\n            <div class="slds-form-element">\n                <input type="password" id="password" name="password" class="slds-input" required>\n            </div>\n            <button type="submit" class="slds-button slds-button_brand">Login</button>\n        </form>\n    </div>\n</body>\n</html>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Salesforce SOQL Query App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 50px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .login-btn {
+            background-color: #00a1de;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .login-btn:hover {
+            background-color: #0091c4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SOQL Query Tool</h1>
+        <p>Execute Salesforce SOQL queries and export results</p>
+        <a href="/login" class="login-btn">Login with Salesforce</a>
+    </div>
+</body>
+</html>
