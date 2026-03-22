@@ -132,7 +132,8 @@ def dashboard():
     
     return render_template('dashboard.html', 
                           user_name=session.get('user_name'),
-                          user_email=session.get('user_email'))
+                          user_email=session.get('user_email'),
+                          instance_url=session.get('instance_url'))
 
 @app.route('/api/execute-query', methods=['POST'])
 def execute_query():
