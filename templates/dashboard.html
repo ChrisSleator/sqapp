@@ -22,12 +22,24 @@
             font-weight: 700;
             margin: 0;
         }
+        .app-header__instance {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.8rem;
+            flex: 1;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 1rem;
+        }
         .app-header__user {
             color: rgba(255,255,255,0.9);
             font-size: 0.875rem;
             display: flex;
             align-items: center;
             gap: 1rem;
+            flex: 1;
+            justify-content: flex-end;
         }
         #results-table-container {
             overflow-x: auto;
@@ -54,6 +66,9 @@
     <!-- Header -->
     <header class="app-header">
         <h1 class="app-header__title">SOQL Query Tool</h1>
+        {% if instance_url %}
+            <span class="app-header__instance">{{ instance_url | replace('https://', '') }}</span>
+        {% endif %}
         <div class="app-header__user">
             {% if user_name %}
                 <span>{{ user_name }}{% if user_email %} &mdash; {{ user_email }}{% endif %}</span>
