@@ -58,15 +58,13 @@ def login():
     
     session['oauth_state'] = state
     session['pkce_verifier'] = code_verifier
+
+
+    auth_url = f"{SF_AUTH_URL}?{urlencode({{'response_type': 'code', 'client_id': SF_CLIENT_ID, 
+                                            'redirect_uri': SF_REDIRECT_URI, 'state': state, 
+                                            'code_challenge': code_challenge, 'code_challenge_method': 'S256'}})}"
     
-    auth_url = f"{SF_AUTH_URL}?{urlencode({
-        'response_type': 'code',
-        'client_id': SF_CLIENT_ID,
-        'redirect_uri': SF_REDIRECT_URI,
-        'state': state,
-        'code_challenge': code_challenge,
-        'code_challenge_method': 'S256',
-    })}"
+
     
     return redirect(auth_url)
 
