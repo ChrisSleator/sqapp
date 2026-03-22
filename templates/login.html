@@ -18,6 +18,7 @@
             padding: 50px;
             border-radius: 10px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            min-width: 340px;
         }
         h1 {
             color: #333;
@@ -25,18 +26,53 @@
         }
         p {
             color: #666;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 5px;
+        }
+        .form-group select,
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 9px 12px;
+            font-size: 14px;
+            border: 1px solid #c9c9c9;
+            border-radius: 4px;
+            box-sizing: border-box;
+            color: #333;
+        }
+        .form-group select:focus,
+        .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: #00a1de;
+            box-shadow: 0 0 0 2px rgba(0,161,222,0.2);
+        }
+        #custom-domain-group {
+            display: none;
+        }
+        .domain-hint {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
         }
         .login-btn {
             background-color: #00a1de;
             color: white;
             border: none;
-            padding: 15px 40px;
+            padding: 13px 40px;
             font-size: 16px;
             border-radius: 5px;
             cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
+            width: 100%;
+            margin-top: 8px;
         }
         .login-btn:hover {
             background-color: #0091c4;
@@ -47,7 +83,69 @@
     <div class="container">
         <h1>SOQL Query Tool</h1>
         <p>Execute Salesforce SOQL queries and export results</p>
-        <a href="/login" class="login-btn">Login with Salesforce</a>
+
+        <form id="login-form" method="get" action="/login">
+            <div class="form-group">
+                <label for="env">Salesforce Environment</label>
+                <select id="env" name="env" onchange="toggleCustomDomain()">
+                    <option value="production">Production (login.salesforce.com)</option>
+                    <option value="sandbox">Sandbox (test.salesforce.com)</option>
+                    <option value="custom">Custom Domain</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="custom-domain-group">
+                <label for="domain">Your Domain</label>
+                <input type="text" id="domain" name="domain" placeholder="myorg" autocomplete="off" oninput="updateDomainHint()">
+                <div class="domain-hint" id="domain-hint">Enter your domain prefix above.</div>
+            </div>
+
+            <button type="submit" class="login-btn">Login with Salesforce</button>
+        </form>
     </div>
+
+    <script>
+        function updateDomainHint() {
+            var domain = document.getElementById('domain').value.trim();
+            var hint = document.getElementById('domain-hint');
+            if (domain) {
+                hint.textContent = '';
+                hint.appendChild(document.createTextNode('Your org will be reached at '));
+                var strong = document.createElement('strong');
+                strong.textContent = domain;
+                hint.appendChild(strong);
+                hint.appendChild(document.createTextNode('.my.salesforce.com'));
+            } else {
+                hint.textContent = 'Enter your domain prefix above.';
+            }
+        }
+
+        function toggleCustomDomain() {
+            var env = document.getElementById('env').value;
+            var customGroup = document.getElementById('custom-domain-group');
+            var domainInput = document.getElementById('domain');
+            if (env === 'custom') {
+                customGroup.style.display = 'block';
+                domainInput.required = true;
+            } else {
+                customGroup.style.display = 'none';
+                domainInput.required = false;
+                domainInput.value = '';
+                document.getElementById('domain-hint').textContent = 'Enter your domain prefix above.';
+            }
+        }
+
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            var env = document.getElementById('env').value;
+            if (env === 'custom') {
+                var domain = document.getElementById('domain').value.trim();
+                if (!domain) {
+                    e.preventDefault();
+                    alert('Please enter your custom domain name.');
+                    document.getElementById('domain').focus();
+                }
+            }
+        });
+    </script>
 </body>
 </html>

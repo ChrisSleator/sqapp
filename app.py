@@ -1,4 +1,5 @@
 import os
+import re
 import secrets
 import hashlib
 import base64
@@ -51,8 +52,31 @@ def index():
         return redirect('/dashboard')
     return render_template('login.html')
 
+def get_sf_base_url(env, domain=None):
+    """Return the Salesforce base URL based on the selected environment."""
+    if env == 'sandbox':
+        return 'https://test.salesforce.com'
+    if env == 'custom':
+        if not domain:
+            return None
+        # Strip protocol if included, keep only hostname
+        domain = re.sub(r'^https?://', '', domain.strip()).split('/')[0]
+        # Validate domain contains only safe characters
+        if not re.match(r'^[a-zA-Z0-9.-]+$', domain):
+            return None
+        return f'https://{domain}.my.salesforce.com'
+    return 'https://login.salesforce.com'
+
 @app.route('/login')
 def login():
+    env = request.args.get('env', 'production')
+    domain = request.args.get('domain', '').strip()
+
+    base_url = get_sf_base_url(env, domain)
+    if base_url is None:
+        return render_template('error.html', error='Invalid or missing custom domain. Please enter a valid domain name.'), 400
+    session['sf_base_url'] = base_url
+
     state = secrets.token_urlsafe(16)
     code_verifier, code_challenge = generate_pkce()
     
@@ -67,7 +91,7 @@ def login():
         'code_challenge': code_challenge,
         'code_challenge_method': 'S256',
     }
-    auth_url = f"{SF_AUTH_URL}?{urlencode(params)}"
+    auth_url = f"{base_url}/services/oauth2/authorize?{urlencode(params)}"
     
     return redirect(auth_url)
 
@@ -100,7 +124,8 @@ def callback():
             'code_verifier': session.get('pkce_verifier'),
         }
         
-        response = requests.post(SF_TOKEN_URL, data=token_data)
+        token_url = f"{session.get('sf_base_url', 'https://login.salesforce.com')}/services/oauth2/token"
+        response = requests.post(token_url, data=token_data)
         response.raise_for_status()
         
         token_response = response.json()
