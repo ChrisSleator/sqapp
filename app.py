@@ -10,7 +10,6 @@ from datetime import datetime
 
 from flask import Flask, render_template, request, redirect, session, jsonify, send_file
 import requests
-from authlib.integrations.flask_client import OAuth
 from simple_salesforce import Salesforce
 
 app = Flask(__name__)
@@ -23,20 +22,7 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 SF_CLIENT_ID = os.environ.get('SF_CLIENT_ID')
 SF_CLIENT_SECRET = os.environ.get('SF_CLIENT_SECRET')
 SF_REDIRECT_URI = os.environ.get('SF_REDIRECT_URI', 'http://localhost:5000/callback')
-SF_AUTH_URL = 'https://login.salesforce.com/services/oauth2/authorize'
-SF_TOKEN_URL = 'https://login.salesforce.com/services/oauth2/token'
 SF_API_VERSION = 'v60.0'
-
-oauth = OAuth(app)
-salesforce = oauth.register(
-    'salesforce',
-    client_id=SF_CLIENT_ID,
-    client_secret=SF_CLIENT_SECRET,
-    access_token_url=SF_TOKEN_URL,
-    authorize_url=SF_AUTH_URL,
-    api_base_url='https://login.salesforce.com',
-    client_kwargs={'scope': 'api refresh_token offline_access'},
-)
 
 # Generate PKCE parameters
 def generate_pkce():
